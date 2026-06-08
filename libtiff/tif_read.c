@@ -822,6 +822,7 @@ int TIFFFillStrip(TIFF *tif, uint32_t strip)
     if ((tif->tif_flags & TIFF_NOREADRAW) == 0)
     {
         uint64_t bytecount = TIFFGetStrileByteCount(tif, strip);
+        tmsize_t stripsize;
         if (bytecount == 0 || bytecount > (uint64_t)TIFF_INT64_MAX)
         {
             TIFFErrorExtR(tif, module,
@@ -832,7 +833,7 @@ int TIFFFillStrip(TIFF *tif, uint32_t strip)
         }
 
         /* To avoid excessive memory allocations: */
-        const tmsize_t stripsize = TIFFStripSize(tif);
+        stripsize = TIFFStripSize(tif);
         if (stripsize > 0)
         {
             if (bytecount > 1024 * 1024 &&
@@ -1304,6 +1305,7 @@ int TIFFFillTile(TIFF *tif, uint32_t tile)
     if ((tif->tif_flags & TIFF_NOREADRAW) == 0)
     {
         uint64_t bytecount = TIFFGetStrileByteCount(tif, tile);
+        tmsize_t tilesize;
         if (bytecount == 0 || bytecount > (uint64_t)TIFF_INT64_MAX)
         {
             TIFFErrorExtR(tif, module,
@@ -1313,7 +1315,7 @@ int TIFFFillTile(TIFF *tif, uint32_t tile)
         }
 
         /* To avoid excessive memory allocations: */
-        const tmsize_t tilesize = TIFFTileSize(tif);
+        tilesize = TIFFTileSize(tif);
         if (tilesize > 0)
         {
             if (bytecount > 1024 * 1024 &&
