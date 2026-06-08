@@ -129,6 +129,7 @@ uint64_t _TIFFStrileSize64(TIFF *tif, uint32_t nrows, int isStrip)
         uint32_t samplingblocks_ver;
         uint64_t samplingrow_samples;
         uint64_t samplingrow_size;
+        uint32_t width = isStrip ? td->td_imagewidth : td->td_tilewidth;
         if (td->td_samplesperpixel != 3)
         {
             TIFFErrorExtR(tif, module, "Invalid td_samplesperpixel value");
@@ -148,7 +149,6 @@ uint64_t _TIFFStrileSize64(TIFF *tif, uint32_t nrows, int isStrip)
         }
         samplingblock_samples =
             (uint16_t)(ycbcrsubsampling[0] * ycbcrsubsampling[1] + 2);
-        const uint32_t width = isStrip ? td->td_imagewidth : td->td_tilewidth;
         samplingblocks_hor = TIFFhowmany_32(width, ycbcrsubsampling[0]);
         samplingblocks_ver = TIFFhowmany_32(nrows, ycbcrsubsampling[1]);
         samplingrow_samples = _TIFFMultiply64(tif, samplingblocks_hor,

@@ -118,12 +118,15 @@ int TIFFForceStrileArrayWriting(TIFF *tif)
     }
 
     if (_TIFFRewriteField(tif,
-                          isTiled ? TIFFTAG_TILEOFFSETS : TIFFTAG_STRIPOFFSETS,
-                          TIFF_LONG8, tif->tif_dir.td_nstrips,
+                          (uint16_t)(isTiled ? TIFFTAG_TILEOFFSETS
+                                             : TIFFTAG_STRIPOFFSETS),
+                          TIFF_LONG8, (tmsize_t)tif->tif_dir.td_nstrips,
                           tif->tif_dir.td_stripoffset_p) &&
         _TIFFRewriteField(
-            tif, isTiled ? TIFFTAG_TILEBYTECOUNTS : TIFFTAG_STRIPBYTECOUNTS,
-            TIFF_LONG8, tif->tif_dir.td_nstrips,
+            tif,
+            (uint16_t)(isTiled ? TIFFTAG_TILEBYTECOUNTS
+                                : TIFFTAG_STRIPBYTECOUNTS),
+            TIFF_LONG8, (tmsize_t)tif->tif_dir.td_nstrips,
             tif->tif_dir.td_stripbytecount_p))
     {
         tif->tif_flags &= ~TIFF_DIRTYSTRIP;
