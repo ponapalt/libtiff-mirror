@@ -182,6 +182,7 @@ void *_TIFFmallocExt(TIFF *tif, tmsize_t s)
     }
     if (tif != NULL && tif->tif_max_cumulated_mem_alloc > 0)
     {
+        void *ptr;
         if (s > tif->tif_max_cumulated_mem_alloc -
                     tif->tif_cur_cumulated_mem_alloc ||
             s > TIFF_TMSIZE_T_MAX - LEADING_AREA_TO_STORE_ALLOC_SIZE)
@@ -189,7 +190,7 @@ void *_TIFFmallocExt(TIFF *tif, tmsize_t s)
             _TIFFEmitErrorAboveMaxCumulatedMemAlloc(tif, "_TIFFmallocExt", s);
             return NULL;
         }
-        void *ptr = _TIFFmalloc(LEADING_AREA_TO_STORE_ALLOC_SIZE + s);
+        ptr = _TIFFmalloc(LEADING_AREA_TO_STORE_ALLOC_SIZE + s);
         if (!ptr)
             return NULL;
         tif->tif_cur_cumulated_mem_alloc += s;
@@ -216,6 +217,7 @@ void *_TIFFcallocExt(TIFF *tif, tmsize_t nmemb, tmsize_t siz)
     if (tif != NULL && tif->tif_max_cumulated_mem_alloc > 0)
     {
         const tmsize_t s = nmemb * siz;
+        void *ptr;
         if (s > tif->tif_max_cumulated_mem_alloc -
                     tif->tif_cur_cumulated_mem_alloc ||
             s > TIFF_TMSIZE_T_MAX - LEADING_AREA_TO_STORE_ALLOC_SIZE)
@@ -223,7 +225,7 @@ void *_TIFFcallocExt(TIFF *tif, tmsize_t nmemb, tmsize_t siz)
             _TIFFEmitErrorAboveMaxCumulatedMemAlloc(tif, "_TIFFcallocExt", s);
             return NULL;
         }
-        void *ptr = _TIFFcalloc(LEADING_AREA_TO_STORE_ALLOC_SIZE + s, 1);
+        ptr = _TIFFcalloc(LEADING_AREA_TO_STORE_ALLOC_SIZE + s, 1);
         if (!ptr)
             return NULL;
         tif->tif_cur_cumulated_mem_alloc += s;
@@ -251,6 +253,7 @@ void *_TIFFreallocExt(TIFF *tif, void *p, tmsize_t s)
     {
         void *oldPtr = p;
         tmsize_t oldSize = 0;
+        void *newPtr;
         if (p)
         {
             oldPtr = (char *)p - LEADING_AREA_TO_STORE_ALLOC_SIZE;
@@ -266,7 +269,7 @@ void *_TIFFreallocExt(TIFF *tif, void *p, tmsize_t s)
                                                     s - oldSize);
             return NULL;
         }
-        void *newPtr =
+        newPtr =
             _TIFFrealloc(oldPtr, LEADING_AREA_TO_STORE_ALLOC_SIZE + s);
         if (newPtr == NULL)
             return NULL;
@@ -565,6 +568,7 @@ TIFF *TIFFClientOpenExt(const char *name, const char *mode,
     if ((m & O_TRUNC) ||
         !ReadOK(tif, &tif->tif_header, sizeof(TIFFHeaderClassic)))
     {
+        TIFFHeaderUnion tif_header_swapped;
         if (tif->tif_mode == O_RDONLY)
         {
             TIFFErrorExtR(tif, name, "Cannot read TIFF header");
@@ -580,7 +584,6 @@ TIFF *TIFFClientOpenExt(const char *name, const char *mode,
         tif->tif_header.common.tiff_magic =
             (tif->tif_flags & TIFF_SWAB) ? TIFF_BIGENDIAN : TIFF_LITTLEENDIAN;
 #endif
-        TIFFHeaderUnion tif_header_swapped;
         if (!(tif->tif_flags & TIFF_BIGTIFF))
         {
             tif->tif_header.common.tiff_version = TIFF_VERSION_CLASSIC;
