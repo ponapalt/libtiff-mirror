@@ -225,7 +225,7 @@ static int TIFFDefaultTransferFunction(TIFF *tif, TIFFDirectory *td)
     if (td->td_bitspersample > 24)
         return 0;
 
-    n = (tmsize_t)(1ULL << td->td_bitspersample);
+    n = (tmsize_t)(1Ui64 << td->td_bitspersample);
     nbytes = (tmsize_t)((uint64_t)n * sizeof(uint16_t));
     tf[0] = (uint16_t *)_TIFFmallocExt(tif, nbytes);
     if (tf[0] == NULL)
@@ -289,7 +289,7 @@ static int TIFFDefaultRefBlackWhite(TIFF *tif, TIFFDirectory *td)
             td->td_refblackwhite[2 * i + 0] = 0;
             if (td->td_bitspersample < 64)
                 td->td_refblackwhite[2 * i + 1] =
-                    (float)((1ULL << td->td_bitspersample) - 1ULL);
+                    (float)(__int64)((1Ui64 << td->td_bitspersample) - 1Ui64);
             else
                 td->td_refblackwhite[2 * i + 1] = (float)UINT64_MAX;
         }

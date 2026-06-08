@@ -316,6 +316,7 @@ static int TIFFRewriteDirectorySec(TIFF *tif, int isimage, int imagedone,
                                    uint64_t *pdiroff)
 {
     static const char module[] = "TIFFRewriteDirectory";
+    uint64_t torewritediroff;
 
     /* We don't need to do anything special if it hasn't been written. */
     if (tif->tif_diroff == 0)
@@ -325,7 +326,7 @@ static int TIFFRewriteDirectorySec(TIFF *tif, int isimage, int imagedone,
      * Find and zero the pointer to this directory, so that TIFFLinkDirectory
      * will cause it to be added after this directories current pre-link.
      */
-    uint64_t torewritediroff = tif->tif_diroff;
+    torewritediroff = tif->tif_diroff;
 
     if (!(tif->tif_flags & TIFF_BIGTIFF))
     {
@@ -2216,6 +2217,7 @@ static int TIFFWriteDirectoryTagTransferfunction(TIFF *tif, uint32_t *ndir,
     uint16_t n;
     uint16_t *o;
     int p;
+    int i;
     /* TIFFTAG_TRANSFERFUNCTION expects (1 or 3) pointer to arrays with
      * 2**BitsPerSample uint16_t values.
      */
@@ -2235,7 +2237,7 @@ static int TIFFWriteDirectoryTagTransferfunction(TIFF *tif, uint32_t *ndir,
     /* clang-format on */
 
     /* Check for proper number of transferfunctions */
-    for (int i = 0; i < n; i++)
+    for (i = 0; i < n; i++)
     {
         if (tif->tif_dir.td_transferfunction[i] == NULL)
         {
@@ -2817,7 +2819,7 @@ static void ToRationalEuclideanGCD(double value, int blnUseSignedRange,
     {
         nMax = ((9223372036854775807 - 1) / 2); /* for ULLONG range */
     }
-    fMax = (double)nMax;
+    fMax = (double)(int64_t)nMax;
 
     /*-- For the Euclidean GCD define the denominator range, so that it stays
      * within size of unsigned long variables. maxDenom should be LONG_MAX for
@@ -2973,8 +2975,8 @@ static void DoubleToRational(double value, uint32_t *num, uint32_t *denom)
     }
 
     /* Check, which one has higher accuracy and take that. */
-    dblDiff = fabs(value - ((double)ullNum / (double)ullDenom));
-    dblDiff2 = fabs(value - ((double)ullNum2 / (double)ullDenom2));
+    dblDiff = fabs(value - ((double)(int64_t)ullNum / (double)(int64_t)ullDenom));
+    dblDiff2 = fabs(value - ((double)(int64_t)ullNum2 / (double)(int64_t)ullDenom2));
     if (dblDiff < dblDiff2)
     {
         *num = (uint32_t)ullNum;
@@ -3049,8 +3051,8 @@ static void DoubleToSrational(double value, int32_t *num, int32_t *denom)
     }
 
     /* Check, which one has higher accuracy and take that. */
-    dblDiff = fabs(value - ((double)ullNum / (double)ullDenom));
-    dblDiff2 = fabs(value - ((double)ullNum2 / (double)ullDenom2));
+    dblDiff = fabs(value - ((double)(int64_t)ullNum / (double)(int64_t)ullDenom));
+    dblDiff2 = fabs(value - ((double)(int64_t)ullNum2 / (double)(int64_t)ullDenom2));
     if (dblDiff < dblDiff2)
     {
         *num = (int32_t)(neg * (long)ullNum);
@@ -3226,6 +3228,7 @@ static int TIFFWriteDirectoryTagData(TIFF *tif, uint32_t *ndir,
 static int TIFFLinkDirectory(TIFF *tif)
 {
     static const char module[] = "TIFFLinkDirectory";
+    tdir_t ndir;
 
     tif->tif_diroff = (TIFFSeekFile(tif, 0, SEEK_END) + 1) & (~((toff_t)1));
 
@@ -3287,11 +3290,12 @@ static int TIFFLinkDirectory(TIFF *tif)
     /*
      * Handle main-IFDs
      */
-    tdir_t ndir = 1; /* count current number of main-IFDs */
+    ndir = 1; /* count current number of main-IFDs */
     if (!(tif->tif_flags & TIFF_BIGTIFF))
     {
         uint32_t m;
         uint32_t nextdir;
+        tdir_t dirn;
         m = (uint32_t)(tif->tif_diroff);
         if (tif->tif_flags & TIFF_SWAB)
             TIFFSwabLong(&m);
@@ -3315,7 +3319,7 @@ static int TIFFLinkDirectory(TIFF *tif)
         /*
          * Not the first directory, search to the last and append.
          */
-        tdir_t dirn = 0;
+        dirn = 0;
         if (tif->tif_lastdiroff != 0 &&
             _TIFFGetDirNumberFromOffset(tif, tif->tif_lastdiroff, &dirn))
         {
@@ -3378,6 +3382,7 @@ static int TIFFLinkDirectory(TIFF *tif)
         /*- BigTIFF -*/
         uint64_t m;
         uint64_t nextdir;
+        tdir_t dirn;
         m = tif->tif_diroff;
         if (tif->tif_flags & TIFF_SWAB)
             TIFFSwabLong8(&m);
@@ -3401,7 +3406,7 @@ static int TIFFLinkDirectory(TIFF *tif)
         /*
          * Not the first directory, search to the last and append.
          */
-        tdir_t dirn = 0;
+        dirn = 0;
         if (tif->tif_lastdiroff != 0 &&
             _TIFFGetDirNumberFromOffset(tif, tif->tif_lastdiroff, &dirn))
         {
