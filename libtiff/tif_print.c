@@ -76,13 +76,14 @@ static void _TIFFPrintField(FILE *fd, const TIFFField *fip,
                             uint32_t value_count, void *raw_data)
 {
     uint32_t j;
+    size_t i;
 
     /* Print a user-friendly name for tags of relatively common use, but */
     /* which aren't registered by libtiff itself. */
     const char *field_name = fip->field_name;
     if (TIFFFieldIsAnonymous(fip))
     {
-        for (size_t i = 0; i < NTAGS; ++i)
+        for (i = 0; i < NTAGS; ++i)
         {
             if (fip->field_tag == tagnames[i].tag)
             {
@@ -565,8 +566,9 @@ void TIFFPrintDirectory(TIFF *tif, FILE *fd, long flags)
                 fprintf(fd, "   (BitsPerSample too large to print safely)\n");
             else
             {
-                uint64_t n = 1ULL << td->td_bitspersample;
-                for (uint64_t l = 0u; l < n; l++)
+                uint64_t n = (uint64_t)1 << td->td_bitspersample;
+                uint64_t l;
+                for (l = 0u; l < n; l++)
                     fprintf(fd,
                             "   %5" PRIu64 ": %5" PRIu16 " %5" PRIu16
                             " %5" PRIu16 "\n",
@@ -600,8 +602,9 @@ void TIFFPrintDirectory(TIFF *tif, FILE *fd, long flags)
                 fprintf(fd, "    (BitsPerSample too large to print safely)\n");
             else
             {
-                uint64_t n = 1ULL << td->td_bitspersample;
-                for (uint64_t l = 0; l < n; l++)
+                uint64_t n = (uint64_t)1 << td->td_bitspersample;
+                uint64_t l;
+                for (l = 0; l < n; l++)
                 {
                     uint16_t i;
                     fprintf(fd, "    %2" PRIu64 ": %5" PRIu16, l,
