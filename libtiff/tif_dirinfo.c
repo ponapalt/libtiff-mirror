@@ -630,10 +630,9 @@ int _TIFFMergeFields(TIFF *tif, const TIFFField info[], uint32_t n)
     static const char reason[] = "for fields array";
     /* TIFFField** tp; */
     uint32_t i;
+    TIFFField **tif_newfields = NULL;
 
     tif->tif_foundfield = NULL;
-
-    TIFFField **tif_newfields = NULL;
 
     if (tif->tif_fields && tif->tif_nfields > 0)
     {
@@ -996,6 +995,7 @@ TIFFField *_TIFFCreateAnonField(TIFF *tif, uint32_t tag,
                                 TIFFDataType field_type)
 {
     TIFFField *fld;
+    char *field_name_buf;
     (void)tif;
 
     fld = (TIFFField *)_TIFFmallocExt(tif, sizeof(TIFFField));
@@ -1059,7 +1059,7 @@ TIFFField *_TIFFCreateAnonField(TIFF *tif, uint32_t tag,
     fld->field_bit = FIELD_CUSTOM;
     fld->field_oktochange = TRUE;
     fld->field_passcount = TRUE;
-    char *field_name_buf = (char *)_TIFFmallocExt(tif, 32);
+    field_name_buf = (char *)_TIFFmallocExt(tif, 32);
     if (field_name_buf == NULL)
     {
         _TIFFfreeExt(tif, fld);

@@ -83,9 +83,10 @@ void _TIFFErrorEarly(TIFFOpenOptions *opts, thandle_t clientdata,
     va_list ap;
     if (opts && opts->errorhandler)
     {
+        int stop;
         va_start(ap, fmt);
-        int stop = opts->errorhandler(NULL, opts->errorhandler_user_data,
-                                      module, fmt, ap);
+        stop = opts->errorhandler(NULL, opts->errorhandler_user_data,
+                                  module, fmt, ap);
         va_end(ap);
         if (stop)
             return;
@@ -109,8 +110,9 @@ void TIFFErrorExtR(TIFF *tif, const char *module, const char *fmt, ...)
     va_list ap;
     if (tif && tif->tif_errorhandler)
     {
+        int stop;
         va_start(ap, fmt);
-        int stop = (*tif->tif_errorhandler)(
+        stop = (*tif->tif_errorhandler)(
             tif, tif->tif_errorhandler_user_data, module, fmt, ap);
         va_end(ap);
         if (stop)

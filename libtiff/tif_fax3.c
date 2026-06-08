@@ -442,18 +442,16 @@ RETRY_WITHOUT_EOL_2D:
 #undef SWAP
 
 #define FILL(n, cp)                                                            \
-    for (int32_t ifill = 0; ifill < (n); ++ifill)                              \
-    {                                                                          \
-        (cp)[ifill] = 0xff;                                                    \
-    }                                                                          \
-    (cp) += (n);
+    do {                                                                       \
+        memset((cp), 0xff, (size_t)(n));                                       \
+        (cp) += (n);                                                           \
+    } while (0)
 
 #define ZERO(n, cp)                                                            \
-    for (int32_t izero = 0; izero < (n); ++izero)                              \
-    {                                                                          \
-        (cp)[izero] = 0;                                                       \
-    }                                                                          \
-    (cp) += (n);
+    do {                                                                       \
+        memset((cp), 0x00, (size_t)(n));                                       \
+        (cp) += (n);                                                           \
+    } while (0)
 
 /*
  * Bit-fill a row according to the white/black
@@ -1645,6 +1643,7 @@ int TIFFInitCCITTFax3(TIFF *tif, int scheme)
 static int Fax4Decode(TIFF *tif, uint8_t *buf, tmsize_t occ, uint16_t s)
 {
     DECLARE_STATE_2D(tif, sp, "Fax4Decode");
+    int start;
     (void)s;
     if (occ % sp->b.rowbytes)
     {
@@ -1654,7 +1653,7 @@ static int Fax4Decode(TIFF *tif, uint8_t *buf, tmsize_t occ, uint16_t s)
     if (CheckReachedCounters(tif, module, sp))
         return (-1);
     CACHE_STATE(tif, sp);
-    int start = sp->line;
+    start = sp->line;
     while (occ > 0)
     {
         a0 = 0;
