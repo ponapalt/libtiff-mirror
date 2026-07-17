@@ -242,6 +242,9 @@ extern "C"
     {
         tiffis_data *data = reinterpret_cast<tiffis_data *>(fd);
 
+        if (data->start_pos == ios::pos_type(-1))
+            return static_cast<uint64_t>(-1);
+
         switch (whence)
         {
             case SEEK_SET:
@@ -280,7 +283,15 @@ extern "C"
             }
         }
 
-        return (uint64_t)(data->stream->tellg() - data->start_pos);
+        ios::pos_type pos = data->stream->tellg();
+        if (pos == ios::pos_type(-1))
+            return static_cast<uint64_t>(-1);
+
+        ios::off_type relative_pos = pos - data->start_pos;
+        if (relative_pos < 0)
+            return static_cast<uint64_t>(-1);
+
+        return static_cast<uint64_t>(relative_pos);
     }
 
     static uint64_t _tiffosSizeProc(thandle_t fd)
@@ -290,11 +301,33 @@ extern "C"
         ios::pos_type pos = os->tellp();
         ios::pos_type len;
 
+        // Failed stream positions must not be converted to unsigned sizes.
+        if (pos == ios::pos_type(-1))
+            return 0;
+
         os->seekp(0, ios::end);
+        if (os->fail())
+        {
+            ios::iostate old_state = os->rdstate();
+            // Temporarily clear failbit to restore the original position.
+            os->clear(os->rdstate() & ~ios::failbit);
+            os->seekp(pos);
+            os->clear(old_state);
+            return 0;
+        }
         len = os->tellp();
+        if (len == ios::pos_type(-1))
+        {
+            ios::iostate old_state = os->rdstate();
+            // Temporarily clear failbit to restore the original position.
+            os->clear(os->rdstate() & ~ios::failbit);
+            os->seekp(pos);
+            os->clear(old_state);
+            return 0;
+        }
         os->seekp(pos);
 
-        return (uint64_t)len;
+        return static_cast<uint64_t>(len);
     }
 
     static uint64_t _tiffisSizeProc(thandle_t fd)
@@ -303,11 +336,33 @@ extern "C"
         ios::pos_type pos = data->stream->tellg();
         ios::pos_type len;
 
+        // Failed stream positions must not be converted to unsigned sizes.
+        if (pos == ios::pos_type(-1))
+            return 0;
+
         data->stream->seekg(0, ios::end);
+        if (data->stream->fail())
+        {
+            ios::iostate old_state = data->stream->rdstate();
+            // Temporarily clear failbit to restore the original position.
+            data->stream->clear(data->stream->rdstate() & ~ios::failbit);
+            data->stream->seekg(pos);
+            data->stream->clear(old_state);
+            return 0;
+        }
         len = data->stream->tellg();
+        if (len == ios::pos_type(-1))
+        {
+            ios::iostate old_state = data->stream->rdstate();
+            // Temporarily clear failbit to restore the original position.
+            data->stream->clear(data->stream->rdstate() & ~ios::failbit);
+            data->stream->seekg(pos);
+            data->stream->clear(old_state);
+            return 0;
+        }
         data->stream->seekg(pos);
 
-        return (uint64_t)len;
+        return static_cast<uint64_t>(len);
     }
 
     static int _tiffosCloseProc(thandle_t fd)
