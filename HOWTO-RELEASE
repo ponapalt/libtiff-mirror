@@ -2,21 +2,25 @@ HOWTO-RELEASE:
 
 Notes on releasing.
 
-0. Make sure that you have current FSF releases of autoconf, automake,
-   and libtool packages installed under a common installation prefix
-   and that these tools are in your executable search path prior to
-   any other installed versions.  Versions delivered with Linux may be
-   altered so it is best to install official FSF releases. GNU 'm4'
-   1.4.16 is needed in order to avoid bugs in m4. These packages may
-   be downloaded from the following ftp locations:
+0. Make sure that you have current stable FSF releases of autoconf,
+   automake, and libtool packages installed under a common
+   installation prefix and that these tools are in your executable
+   search path prior to any other installed versions.  Versions
+   delivered with Linux may be altered (or very stale) so it is best
+   to install official FSF releases. GNU 'm4' 1.4.16 or later is
+   needed in order to avoid bugs in m4. These packages may be
+   downloaded from the following ftp locations:
 
-     m4       - ftp://ftp.gnu.org/pub/gnu/m4
-     autoconf - ftp://ftp.gnu.org/pub/gnu/autoconf
-     automake - ftp://ftp.gnu.org/pub/gnu/automake
-     libtool  - ftp://ftp.gnu.org/pub/gnu/libtool
+     m4       - https://ftpmirror.gnu.org/m4
+     autoconf - https://ftpmirror.gnu.org/autoconf
+     automake - https://ftpmirror.gnu.org/automake
+     libtool  - https://ftpmirror.gnu.org/libtool
 
-   It is recommended to install m4 before autoconf, since the later
-   requires the former.
+   It is recommended to install m4 (if necessary) before autoconf,
+   since the later requires the former.
+
+   At the time this is last updated, the current versions are Autoconf
+   2.73, Automake 1.19, Libtool 2.6.2, and m4 1.4.21.
 
    Release builds should only be done on a system with a functioning
    and correctly set system clock and on a filesystem which accurately
@@ -24,16 +28,21 @@ Notes on releasing.
 
 1. Commit any unsaved changes.
 
-2. Use gnulib's gitlog-to-changelog script to add new (since the last
-   release) entries to the traditional ChangeLog file.
+2. Use gnulib's 'gitlog-to-changelog' script to add new (since the
+   last release) entries to the traditional ChangeLog file.  This
+   script may be retrieved similar to:
 
-   http://git.savannah.gnu.org/gitweb/?p=gnulib.git;a=blob_plain;f=build-aux/gitlog-to-changelog
+     git clone https://git.savannah.gnu.org/git/gnulib.git
+     cd gnulib/build-aux/
+     cp gitlog-to-changelog myscriptdir/
 
-   Take note of
-   the most recent change note time stamp and use that as the starting
-   point.  Concatenate the old logs to the new logs.  The added logs
-   may be used to help produce the release notes (in next step).  For
-   example:
+   where 'myscriptdir' is where you put useful scripts and is in your
+   executable search path.
+
+   Take note of the most recent change note time stamp and use that as
+   the starting point.  Concatenate the old logs to the new logs.  The
+   added logs may be used to help produce the release notes (in next
+   step).  For example:
 
      gitlog-to-changelog --since=`head -n 1 ChangeLog | sed -e 's/ .*//g'` --append-dot > ChangeLog.added
      printf "\n" >> ChangeLog.added
@@ -80,8 +89,21 @@ Notes on releasing.
      ./autogen.sh
 
    This step may be skipped if you have already been using a
-   maintainer build with current autoconf, automake, and libtool
-   packages.  It is only needed when updating tool versions.
+   maintainer build with current stable autoconf, automake, and
+   libtool packages.  It is only needed when updating tool versions
+   and should really be performed far in advance of producing a
+   release for adequate verification.
+
+   The 'autogen.sh' script may optionally update the
+   config/config.guess and config/config.sub files in the source
+   tree.  In order for this happen, use
+
+     git clone https://git.savannah.gnu.org/git/gnulib.git
+
+   in the parent of the libtiff directory so that 'gnulib' is adjacent
+   to 'libtiff'.  Given that hardware/system permutations are
+   often updated, it is worth ensuring that the files updated by
+   'autogen.sh' are current by updating from the gnulib versions.
 
 10. It is recommended (but not required) to build outside of the source
    tree so that the source tree is kept in a pristine state.  This
@@ -100,7 +122,7 @@ Notes on releasing.
 
      make release
 
-   This will update "RELEASE-DATE", "VERSION" in the source tree, 
+   This will update "RELEASE-DATE", "VERSION" in the source tree,
    and libtiff/tiffvers.h in the build tree.
 
 12. In the source tree, verify that the version info in RELEASE-DATE,
