@@ -664,6 +664,10 @@ int TIFFReadRGBAImage(TIFF *tif, uint32_t rwidth, uint32_t rheight,
 static int setorientation(TIFFRGBAImage *img)
 {
     int flip_ret = 0;
+    static const char warnMsg[] =
+        "TIFFRGBAImage cannot rotate but only flip. Therefore, image "
+        "pixel will be moved to %s corner of the raster matrix as origin "
+        "but the image pixel orientation will result in %s";
     if (checkedOrientation(img->req_orientation) == 0)
     {
         TIFFWarningExtR(img->tif, TIFFFileName(img->tif),
@@ -744,10 +748,6 @@ static int setorientation(TIFFRGBAImage *img)
      * two dimensional "raster" matrix the image will be moved
      * (i.e. which raster-corner will be the raster origin).
      */
-    static const char warnMsg[] =
-        "TIFFRGBAImage cannot rotate but only flip. Therefore, image "
-        "pixel will be moved to %s corner of the raster matrix as origin "
-        "but the image pixel orientation will result in %s";
     if ((img->req_orientation <= ORIENTATION_BOTLEFT) &&
         (img->orientation >= ORIENTATION_LEFTTOP))
     {
@@ -779,9 +779,10 @@ static int calcCopyToRasterParameter(TIFFRGBAImage *img, uint32_t *raster,
                                      uint32_t *pwcpy, uint32_t *phcpy,
                                      int *pflip, uint32_t **pp_raster_start,
                                      int32_t *ptoskew, uint32_t *py,
-                                     bool isTiled, uint32_t tilewidth,
+                                     int isTiled, uint32_t tilewidth,
                                      const char *funcName)
 {
+    uint32_t cpywidth;
     /* If the raster height is smaller than the image height,
      * or if there is a row_offset, adapt the number of lines to be copied. */
     if (img->row_offset < 0 || (uint32_t)img->row_offset >= img->height)
@@ -848,7 +849,7 @@ static int calcCopyToRasterParameter(TIFFRGBAImage *img, uint32_t *raster,
      * Tiled images are read tile by tile and therefore toskew has to be
      * calculated using tile-width.
      */
-    const uint32_t cpywidth = isTiled ? tilewidth : *pwcpy;
+    cpywidth = isTiled ? tilewidth : *pwcpy;
     if (*pflip & FLIP_VERTICALLY)
     {
         if ((int64_t)rwidth + cpywidth > INT_MAX)
@@ -921,7 +922,7 @@ static int gtTileContig(TIFFRGBAImage *img, uint32_t *raster, uint32_t rwidth,
     }
 
     if (!calcCopyToRasterParameter(img, raster, rwidth, rheight, &wcpy, &hcpy,
-                                   &flip, &p_raster_start, &toskew, &y, true,
+                                   &flip, &p_raster_start, &toskew, &y, 1,
                                    tw, "gtTileContig"))
     {
         return 0;
@@ -1075,7 +1076,7 @@ static int gtTileSeparate(TIFFRGBAImage *img, uint32_t *raster, uint32_t rwidth,
     }
 
     if (!calcCopyToRasterParameter(img, raster, rwidth, rheight, &wcpy, &hcpy,
-                                   &flip, &p_raster_start, &toskew, &y, true,
+                                   &flip, &p_raster_start, &toskew, &y, 1,
                                    tw, "gtTileSeparate"))
     {
         return 0;
@@ -1280,7 +1281,7 @@ static int gtStripContig(TIFFRGBAImage *img, uint32_t *raster, uint32_t rwidth,
                                  to be written (image area within raster) */
 
     if (!calcCopyToRasterParameter(img, raster, rwidth, rheight, &wcpy, &hcpy,
-                                   &flip, &p_raster_start, &toskew, &y, false,
+                                   &flip, &p_raster_start, &toskew, &y, 0,
                                    0, "gtStripContig"))
     {
         return 0;
@@ -1423,7 +1424,7 @@ static int gtStripSeparate(TIFFRGBAImage *img, uint32_t *raster,
 
     /* For explanation of local parameters refer to gtStripContig() */
     if (!calcCopyToRasterParameter(img, raster, rwidth, rheight, &wcpy, &hcpy,
-                                   &flip, &p_raster_start, &toskew, &y, false,
+                                   &flip, &p_raster_start, &toskew, &y, 0,
                                    0, "gtStripSeparate"))
     {
         return 0;
